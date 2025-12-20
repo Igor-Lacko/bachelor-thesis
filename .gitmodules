@@ -1,0 +1,3 @@
+[submodule "review-scraper"]
+	path = review-scraper
+	url = git@github.com:Igor-Lacko/review-scraper.git
