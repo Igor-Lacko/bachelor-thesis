@@ -7,3 +7,6 @@
 [submodule "review-plotter"]
 	path = review-plotter
 	url = git@github.com:Igor-Lacko/review-plotter.git
+[submodule "review-classifier"]
+	path = review-classifier
+	url = git@github.com:Igor-Lacko/review-classifier.git
