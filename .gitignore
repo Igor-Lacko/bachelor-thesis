@@ -7,3 +7,6 @@ data/
 # All presentation utils, keep the whole completed presentationss
 presentations/*
 !presentations/*.pdf
+
+# Virtual environments
+.venv/

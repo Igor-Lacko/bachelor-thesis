@@ -54,6 +54,10 @@ def combine():
         real = pd.read_csv(DATASET_REAL)
         real["label"] = 1
 
+        # "unified" --> "content" if using the unified dataset so that the columns match
+        if "unified" in real.columns and "content" in synthetic.columns:
+            real = real.rename(columns={"unified": "content"})
+
         # Use only columns present in both datasets (so only in synthetic)
         common_columns = synthetic.columns.intersection(real.columns)
         combined = pd.concat(
@@ -75,8 +79,8 @@ def combine():
             combined["stratify_on"] = (
                 combined["label"].astype(str)
                 + "_"
-                # This rounds down since float -> int is floor, not round
-                + combined["rating"].astype(int).astype(str)
+                # Round to nearest integer
+                + combined["rating"].round(0).astype(int).astype(str)
             )
         console.print(f"[green]Saving combined dataset to {OUTPUT_FILE}[/green]")
         combined.to_csv(OUTPUT_FILE, index=False)
