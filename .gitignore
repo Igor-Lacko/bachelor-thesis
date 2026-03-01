@@ -10,3 +10,6 @@ presentations/*
 
 # Virtual environments
 .venv/
+
+# 3rdparty libs, probably won't be used
+3rdparty/
