@@ -41,8 +41,8 @@ def combine():
     synthetic = __synthetic_to_one()
 
     # Annotate data
-    # 0 == synthetic, 1 == real
-    synthetic["label"] = 0
+    # 0 == real, 1 == synthetic
+    synthetic["label"] = 1
 
     if TO_SYNTHETIC:
         console.print(
@@ -52,7 +52,7 @@ def combine():
     else:
         console.print(f"[green]Loading real dataset from {DATASET_REAL}[/green]")
         real = pd.read_csv(DATASET_REAL)
-        real["label"] = 1
+        real["label"] = 0
 
         # "unified" --> "content" if using the unified dataset so that the columns match
         if "unified" in real.columns and "content" in synthetic.columns:
