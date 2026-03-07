@@ -21,7 +21,13 @@ netstat -tan |grep -q "0.0.0.0:$PORT " && { echo "port $PORT is busy" >&2; exit 
 
 # on the computational node, start running ssh server demon that listens on $PORT port
 echo "Starting SSH server"
-/usr/sbin/sshd -D -p $PORT -o "HostKey $SCRATCHDIR/.ssh/server_key" -o "PermitRootLogin no" -o "PasswordAuthentication no" -o "ChallengeResponseAuthentication no" &
+/usr/sbin/sshd -D -p $PORT \
+    -o "HostKey $SCRATCHDIR/.ssh/server_key" \
+    -o "PermitRootLogin no" \
+    -o "PasswordAuthentication no" \
+    -o "ChallengeResponseAuthentication no" \
+    -o "AllowTcpForwarding yes" \
+    -o "AuthorizedKeysFile $SCRATCHDIR/.ssh/authorized_keys" &
 
 echo "SSH running on $(hostname):$PORT"
 echo "Connect to:" hostname
