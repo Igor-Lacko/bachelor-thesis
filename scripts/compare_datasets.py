@@ -9,6 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import CountVectorizer
 import seaborn as sns
 
 parser = argparse.ArgumentParser(
@@ -24,11 +25,25 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "-s",
+    "--stop-words",
+    required=True,
+    help="Path to a text file containing stop words (one per line) to exclude from the most used words comparison.",
+)
+
+parser.add_argument(
     "-n",
     "--names",
     nargs=2,
     required=False,
     help="Dataset names used in the graphs. If not provided, will use 'Dataset A' and 'Dataset B'.",
+)
+
+parser.add_argument(
+    "--ngrams",
+    type=int,
+    default=2,
+    help="The number of words in n-grams to compare. Defaults to 2 (bigrams).",
 )
 
 parser.add_argument(
@@ -41,6 +56,10 @@ OUTPUT = args.output
 DATASET_A, DATASET_B = args.datasets
 
 (NAME_A, NAME_B) = args.names if args.names else ("Dataset A", "Dataset B")
+STOP_WORDS_FILE = args.stop_words
+
+N_GRAMS = args.ngrams
+
 COLOR_A = "#1f77b4"
 COLOR_B = "#d95f02"
 
@@ -193,16 +212,110 @@ def compare_exclamation_mark_usage(df_a: pd.DataFrame, df_b: pd.DataFrame):
     print(f"{NAME_B} median exclamation marks per review: {median_b}")
 
 
+def get_stop_words(stop_words_file: str) -> list[str]:
+    """Load stop words from a text file.
+
+    Args:
+        stop_words_file (str): Path to the text file containing stop words (one per line).
+    Returns:
+        list[str]: A list of stop words.
+    """
+    with open(
+        stop_words_file,
+        "r",
+    ) as f:
+        stop_words = [line.strip() for line in f if line.strip()]
+    return stop_words
+
+
+def get_vectorizer(
+    df_a: pd.DataFrame, df_b: pd.DataFrame, stop_words: list[str], n: int | None = None
+) -> CountVectorizer:
+    """Create a CountVectorizer with the provided stop words.
+
+    Args:
+        df_a (pd.DataFrame): First dataset with a ``content`` column.
+        df_b (pd.DataFrame): Second dataset with a ``content`` column.
+        stop_words (list[str]): A list of stop words to exclude from the vectorization.
+        n (int | None, optional): The number of words in each n-gram. If None, uses unigrams. Defaults to None.
+
+    Returns:
+        CountVectorizer: A fitted CountVectorizer instance.
+    """
+    vectorizer = CountVectorizer(
+        stop_words=stop_words, ngram_range=(n, n) if n is not None else (1, 1)
+    )
+    corpus = pd.concat([df_a["content"], df_b["content"]], ignore_index=True)
+    vectorizer.fit(corpus)
+    return vectorizer
+
+
+def compare_most_used_words(
+    df_a: pd.DataFrame, df_b: pd.DataFrame, vectorizer: CountVectorizer
+):
+    """Compare the most used words in both datasets and plots and prints the top 10 with count-per-sample.
+
+    Args:
+        df_a (pd.DataFrame): First dataset with a ``content`` column.
+        df_b (pd.DataFrame): Second dataset with a ``content`` column.
+        vectorizer (CountVectorizer): A fitted CountVectorizer to use for transforming the text data.
+    """
+    top_a = pd.Series(
+        vectorizer.transform(df_a["content"]).sum(axis=0).A1 / len(df_a),  # type: ignore
+        index=vectorizer.get_feature_names_out(),
+    ).nlargest(10)
+    top_b = pd.Series(
+        vectorizer.transform(df_b["content"]).sum(axis=0).A1 / len(df_b),  # type: ignore
+        index=vectorizer.get_feature_names_out(),
+    ).nlargest(10)
+
+    print(f"Top 10 words in {NAME_A}:")
+    print(top_a)
+    print(f"Top 10 words in {NAME_B}:")
+    print(top_b)
+
+
+def compare_most_used_ngrams(
+    df_a: pd.DataFrame, df_b: pd.DataFrame, vectorizer: CountVectorizer, n: int
+):
+    """Compare the most used n-grams in both datasets and plots and prints the top 10 with count-per-sample.
+
+    Args:
+        df_a (pd.DataFrame): First dataset with a ``content`` column.
+        df_b (pd.DataFrame): Second dataset with a ``content`` column.
+        vectorizer (CountVectorizer): A fitted CountVectorizer to use for transforming the text data.
+        n (int, optional): The number of words in each n-gram. Defaults to 2.
+    """
+    top_a = pd.Series(
+        vectorizer.transform(df_a["content"]).sum(axis=0).A1 / len(df_a),  # type: ignore
+        index=vectorizer.get_feature_names_out(),
+    ).nlargest(10)
+    top_b = pd.Series(
+        vectorizer.transform(df_b["content"]).sum(axis=0).A1 / len(df_b),  # type: ignore
+        index=vectorizer.get_feature_names_out(),
+    ).nlargest(10)
+
+    print(f"Top 10 {n}-grams in {NAME_A}:")
+    print(top_a)
+    print(f"Top 10 {n}-grams in {NAME_B}:")
+    print(top_b)
+
+
 def main():
     """Load both datasets and generate comparison plots."""
     os.makedirs(OUTPUT, exist_ok=True)
     df_a = pd.read_csv(DATASET_A)
     df_b = pd.read_csv(DATASET_B)
+    stop_words = get_stop_words(STOP_WORDS_FILE)
 
     compare_length_chars(df_a, df_b)
     compare_length_words(df_a, df_b)
     compare_ttr(df_a, df_b)
     compare_exclamation_mark_usage(df_a, df_b)
+    compare_most_used_words(df_a, df_b, get_vectorizer(df_a, df_b, stop_words))
+    compare_most_used_ngrams(
+        df_a, df_b, get_vectorizer(df_a, df_b, stop_words, N_GRAMS), N_GRAMS
+    )
 
 
 if __name__ == "__main__":
