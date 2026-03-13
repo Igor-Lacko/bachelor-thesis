@@ -21,6 +21,11 @@ parser.add_argument(
     required=True,
     help="Path to save the cut dataset CSV file.",
 )
+parser.add_argument(
+    "--use-words",
+    action="store_true",
+    help="Use word count instead of character count.",
+)
 
 args = parser.parse_args()
 
@@ -30,10 +35,12 @@ OUTPUT = args.output
 
 def main():
     df = pd.read_csv(DATASET)
-    print(f"{"*" * 10} Original Dataset Statistics {"*" * 10}")
-    print(df["content"].str.len().describe())
+    len_func = lambda x: len(x.split()) if args.use_words else len(x)
+    df["length"] = df["content"].apply(len_func)
 
-    df["length"] = df["content"].apply(len)
+    print(f"{"*" * 10} Original Dataset Statistics {"*" * 10}")
+    print(df["length"].describe())
+
     Q1 = df["length"].quantile(0.25)
     Q3 = df["length"].quantile(0.75)
 
@@ -46,14 +53,13 @@ def main():
 
     lower_bound = Q1
     upper_bound = min(1000, Q3 + 1.5 * IQR)
-    df_cut = df[(df["length"] >= lower_bound) & (df["length"] <= upper_bound)].drop(
-        columns=["length"]
-    )
+    df_cut = df[(df["length"] >= lower_bound) & (df["length"] <= upper_bound)]
 
     print(f"{"*" * 10} Cut Dataset Statistics {"*" * 10}")
-    print(df_cut["content"].str.len().describe())
+    print(df_cut["length"].describe())
     if "content_type" in df_cut.columns:
         print(df_cut["content_type"].value_counts())
+    df_cut = df_cut.drop(columns=["length"])
     df_cut.to_csv(OUTPUT, index=False)
 
 
