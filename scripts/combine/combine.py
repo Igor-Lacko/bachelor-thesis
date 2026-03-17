@@ -6,6 +6,7 @@ Author: Igor Lacko
 
 import os
 import pandas as pd
+import numpy as np
 from utils import *
 
 
@@ -83,4 +84,9 @@ def combine():
                 + combined["rating"].round(0).astype(int).astype(str)
             )
         console.print(f"[green]Saving combined dataset to {OUTPUT_FILE}[/green]")
+
+        # Shuffle to not have first half s second r
+        combined = combined.reindex(np.random.permutation(combined.index)).reset_index(
+            drop=True
+        )
         combined.to_csv(OUTPUT_FILE, index=False)
