@@ -10,7 +10,7 @@ import numpy as np
 from utils import *
 
 
-def __synthetic_to_one() -> pd.DataFrame:
+def _synthetic_to_one() -> pd.DataFrame:
     """Returns the loaded synthetic dataset if provided, else combines all CSVs in the synthetic folder.
 
     Returns:
@@ -37,9 +37,28 @@ def __synthetic_to_one() -> pd.DataFrame:
         return combined_df
 
 
+def _get_rating_string(rating: int) -> str:
+    """Turns ratings into labels to stratify on like "positive", etc.
+
+    Args:
+        rating (int): Rating to convert.
+
+    Returns:
+        str: String label for the rating.
+    """
+    if rating >= 8:
+        return "positive"
+    elif rating >= 6:
+        return "more_positive"
+    elif rating >= 3:
+        return "more_negative"
+
+    return "negative"
+
+
 def combine():
     """Combines first the synthetic datasets (if needed), then combines with the real dataset (also if needed)."""
-    synthetic = __synthetic_to_one()
+    synthetic = _synthetic_to_one()
 
     # Annotate data
     # 0 == real, 1 == synthetic
@@ -68,7 +87,7 @@ def combine():
         """
             Trick for multi column stratification:
                 Combined columns into a single column by converting to string.
-                If content type it's easy, if rating round it down and append to label.
+                If content type it's easy, if rating get the group for it and do the same.
         """
         if STRATIFY_ON is not None and STRATIFY_ON == "content_type":
             combined["stratify_on"] = (
@@ -80,8 +99,7 @@ def combine():
             combined["stratify_on"] = (
                 combined["label"].astype(str)
                 + "_"
-                # Round to nearest integer
-                + combined["rating"].round(0).astype(int).astype(str)
+                + combined["rating"].apply(_get_rating_string).astype(str)
             )
         console.print(f"[green]Saving combined dataset to {OUTPUT_FILE}[/green]")
 
