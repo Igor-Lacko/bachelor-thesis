@@ -21,3 +21,7 @@ figures/
 *.txt
 *.md
 !./README.md
+
+.vscode/
+
+__pycache__/
