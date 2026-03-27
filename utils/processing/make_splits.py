@@ -7,8 +7,9 @@ Author: Igor Lacko
 
 import argparse
 import os
+
 import pandas as pd
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, train_test_split
 
 parser = argparse.ArgumentParser(
     description="Create training and testing splits from a DataFrame."
@@ -33,7 +34,7 @@ def make_splits(df: pd.DataFrame, output_folder: str):
     """Splits the DataFrame using three different strategies.
         - 80_10_10: 80% train, 10% validation, 10% test split
         - 90_10: 90% train, 10% test split
-        - kfolds: Stratified 5-fold cross-validation
+        - kfolds: 90% train, 10% test split with stratified 5-folds
 
     Args:
         df (pd.DataFrame): Input DataFrame to be split. Has to contain 'stratify_on' column.
@@ -70,15 +71,21 @@ def make_splits(df: pd.DataFrame, output_folder: str):
     train_90.to_csv(os.path.join(folder_90_10, "train.csv"), index=False)
     test_10.to_csv(os.path.join(folder_90_10, "test.csv"), index=False)
 
-    # Stratified 5-fold cross-validation
+    # Stratified 5-fold
+    folds, test_10 = train_test_split(
+        df, test_size=0.1, stratify=df["stratify_on"], random_state=42
+    )
+
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     fold_num = 1
-    for _, test_index in skf.split(df, df["stratify_on"]):
-        fold_data = df.iloc[test_index].reset_index(drop=True)
+    for _, test_index in skf.split(folds, folds["stratify_on"]):
+        fold_data = folds.iloc[test_index].reset_index(drop=True)
         fold_data.to_csv(
             os.path.join(folder_kfolds, f"fold_{fold_num}.csv"), index=False
         )
         fold_num += 1
+
+    test_10.to_csv(os.path.join(folder_kfolds, "test.csv"), index=False)
 
 
 if __name__ == "__main__":

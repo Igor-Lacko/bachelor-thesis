@@ -6,11 +6,12 @@ Author: Igor Lacko
 
 import argparse
 import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import CountVectorizer
 import seaborn as sns
+from sklearn.feature_extraction.text import CountVectorizer
 
 parser = argparse.ArgumentParser(
     description="Compare two datasets by various metrics and generate visualizations."
@@ -179,8 +180,13 @@ def compare_ttr(df_a: pd.DataFrame, df_b: pd.DataFrame):
 
     Note: Might be useless, humans often write short reviews.
     """
-    longer_than_one = lambda df: df[df["content"].str.split().str.len() > 1]
-    ttr = lambda x: len(set(x.split())) / len(x.split()) if len(x.split()) > 0 else 0
+
+    def longer_than_one(df):
+        return df[df["content"].str.split().str.len() > 1]
+
+    def ttr(x):
+        return len(set(x.split())) / len(x.split()) if len(x.split()) > 0 else 0
+
     plot_metric_comparison(
         values_a=longer_than_one(df_a)["content"].apply(ttr),
         values_b=longer_than_one(df_b)["content"].apply(ttr),
