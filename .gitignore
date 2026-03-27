@@ -25,3 +25,4 @@ figures/
 .vscode/
 
 __pycache__/
+utils/scripts/
