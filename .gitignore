@@ -26,3 +26,6 @@ figures/
 
 __pycache__/
 utils/scripts/
+
+# Result csvs
+results/
