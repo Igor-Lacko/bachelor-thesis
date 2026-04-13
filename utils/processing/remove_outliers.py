@@ -5,6 +5,7 @@ Author: Igor Lacko
 """
 
 import argparse
+
 import pandas as pd
 
 parser = argparse.ArgumentParser(
@@ -35,10 +36,13 @@ OUTPUT = args.output
 
 def main():
     df = pd.read_csv(DATASET)
-    len_func = lambda x: len(x.split()) if args.use_words else len(x)
+
+    def len_func(x):
+        return len(x.split()) if args.use_words else len(x)
+
     df["length"] = df["content"].apply(len_func)
 
-    print(f"{"*" * 10} Original Dataset Statistics {"*" * 10}")
+    print(f"{'*' * 10} Original Dataset Statistics {'*' * 10}")
     print(df["length"].describe())
 
     Q1 = df["length"].quantile(0.25)
@@ -55,7 +59,7 @@ def main():
     upper_bound = min(1000, Q3 + 1.5 * IQR)
     df_cut = df[(df["length"] >= lower_bound) & (df["length"] <= upper_bound)]
 
-    print(f"{"*" * 10} Cut Dataset Statistics {"*" * 10}")
+    print(f"{'*' * 10} Cut Dataset Statistics {'*' * 10}")
     print(df_cut["length"].describe())
     if "content_type" in df_cut.columns:
         print(df_cut["content_type"].value_counts())

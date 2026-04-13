@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import unidecode
 from sklearn.feature_extraction.text import CountVectorizer
 
 parser = argparse.ArgumentParser(
@@ -307,6 +308,43 @@ def compare_most_used_ngrams(
     print(top_b)
 
 
+def compare_stop_word_ratio(
+    df_a: pd.DataFrame, df_b: pd.DataFrame, stop_words: list[str]
+):
+    """Compare the ratio of stop words to total words in both datasets.
+
+    Args:
+        df_a (pd.DataFrame): First dataset with a ``content`` column.
+        df_b (pd.DataFrame): Second dataset with a ``content`` column.
+        stop_words (list[str]): A list of stop words to use for the comparison.
+    """
+
+    stop_words = list(map(unidecode.unidecode, stop_words))
+    df_normalized_a = df_a["content"].apply(unidecode.unidecode)
+    df_normalized_b = df_b["content"].apply(unidecode.unidecode)
+
+    def stop_word_ratio(text):
+        words = text.split()
+        if len(words) == 0:
+            return 0
+        stop_word_count = sum(1 for word in words if word in stop_words)
+        return stop_word_count / len(words)
+
+    plot_metric_comparison(
+        values_a=df_normalized_a.apply(stop_word_ratio),
+        values_b=df_normalized_b.apply(stop_word_ratio),
+        x_label="Stop Word Ratio",
+        output_name="stop_word_ratio_distribution.svg",
+    )
+
+    print(
+        f"{NAME_A} mean stop word ratio: {df_normalized_a.apply(stop_word_ratio).mean():.3f}"
+    )
+    print(
+        f"{NAME_B} mean stop word ratio: {df_normalized_b.apply(stop_word_ratio).mean():.3f}"
+    )
+
+
 def main():
     """Load both datasets and generate comparison plots."""
     os.makedirs(OUTPUT, exist_ok=True)
@@ -322,6 +360,7 @@ def main():
     compare_most_used_ngrams(
         df_a, df_b, get_vectorizer(df_a, df_b, stop_words, N_GRAMS), N_GRAMS
     )
+    compare_stop_word_ratio(df_a, df_b, stop_words)
 
 
 if __name__ == "__main__":

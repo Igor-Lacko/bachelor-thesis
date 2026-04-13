@@ -8,10 +8,12 @@ Author: Igor Lacko
 from utils import *
 from combine import combine
 
+
 def main():
     """Script main function."""
     validate_args()
     combine()
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     main()

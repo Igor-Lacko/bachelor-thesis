@@ -31,5 +31,6 @@ def main():
             )
     df.to_csv(OUTPUT, index=False)
 
+
 if __name__ == "__main__":
     main()
