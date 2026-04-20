@@ -1,7 +1,7 @@
 """
-eval_models.py
-Evaluates the performance of several models from classification
-and creates latex tables/figures with the results.
+eval_cross_validation.py
+Evaluates the performance of several models from cross validation
+results and creates latex tables with the results.
 Author: Igor Lacko
 """
 
@@ -21,10 +21,6 @@ TFeatures = Literal[
     "transformer",
     "tfidf",
     "statistical",
-    "meta_full",
-    "meta_without_transformer",
-    "meta_without_tfidf",
-    "meta_without_statistical",
 ]
 TVariant = Literal["unified", "separate"]
 
@@ -52,8 +48,8 @@ def parse_args() -> argparse.Namespace:
         "-o",
         "--output",
         type=str,
-        help="Directory to save the results. Tables will be saved in output/tables and figures in output/figures.",
-        required=True,
+        help="Directory to save the tables.",
+        required=False,
     )
 
     parser.add_argument(
@@ -62,6 +58,13 @@ def parse_args() -> argparse.Namespace:
         type=int,
         help="Number of top models to include in the tables and figures. Default: 3, -1 (or any negative number) for all models.",
         default=3,
+    )
+
+    parser.add_argument(
+        "--show-best-params",
+        action="store_true",
+        help="If true, shows the best parameters for each model for each variant and features. "
+        "Ignores all other parameters except -i",
     )
 
     return parser.parse_args()
@@ -83,20 +86,6 @@ def validate_df(df: pd.DataFrame) -> bool:
         )
         return False
     return True
-
-
-def check_output(output_dir: Path):
-    """Checks if the output directory exists and tables/ and figures/ inside it, if not creates them.
-
-    Args:
-        output_dir (Path): Directory to save the results. Tables will be saved in output/tables and figures in output/figures.
-    """
-    tables_dir = output_dir / "tables"
-    figures_dir = output_dir / "figures"
-
-    for directory in [output_dir, tables_dir, figures_dir]:
-        if not directory.exists():
-            directory.mkdir(parents=True, exist_ok=True)
 
 
 def sort_and_filter(df: pd.DataFrame, mask: pd.Series, top_n: int) -> pd.DataFrame:
@@ -164,8 +153,7 @@ def eval_group(
     top_n: int,
     variant: TVariant,
     features: TFeatures,
-    figures_dir: Path,
-    tables_dir: Path,
+    output_dir: Path,
 ):
     """Evaluates the performance of all models on a given variant and features.
 
@@ -174,8 +162,7 @@ def eval_group(
         top_n (int): Number of top models to include.
         variant (TVariant): Variant to evaluate.
         features (TFeatures): Features to evaluate.
-        figures_dir (Path): Directory to save figures.
-        tables_dir (Path): Directory to save tables.
+        output_dir (Path): Directory to save tables.
     """
     mask = (df_result["variant"] == variant) & (df_result["features"] == features)
     df_group = sort_and_filter(df_result, mask, top_n)
@@ -193,15 +180,14 @@ def eval_group(
     show_top_models(df_group)
     params = loads(df_group.iloc[0]["parameters"])
     show_params(params)
-    to_table(df_group, tables_dir / f"{variant}_{features}.tex")
+    to_table(df_group, output_dir / f"{variant}_{features}.tex")
 
 
 def eval_features_absolute(
     df_result: pd.DataFrame,
     top_n: int,
     features: TFeatures,
-    tables_dir: Path,
-    figures_dir: Path,
+    output_dir: Path,
 ):
     """Evaluates the performance of all models on given features across both variants.
        Just takes the max across both variants, e.g. doesn't average or anything.
@@ -210,8 +196,7 @@ def eval_features_absolute(
         df_result (pd.DataFrame): Dataframe with results.
         top_n (int): Number of top models to include.
         features (TFeatures): Features to evaluate.
-        tables_dir (Path): Directory to save tables.
-        figures_dir (Path): Directory to save figures.
+        output_dir (Path): Directory to save tables.
     """
     mask = df_result["features"] == features
     df_group = sort_and_filter(df_result, mask, top_n)
@@ -229,15 +214,14 @@ def eval_features_absolute(
     show_top_models(df_group, show_variant=True)
     params = loads(df_group.iloc[0]["parameters"])
     show_params(params)
-    to_table(df_group, tables_dir / f"both_{features}.tex")
+    to_table(df_group, output_dir / f"both_{features}.tex")
 
 
 def eval_features_average(
     df_result: pd.DataFrame,
     top_n: int,
     features: TFeatures,
-    tables_dir: Path,
-    figures_dir: Path,
+    output_dir: Path,
 ):
     """Evaluates the performance of all models on given features across both variants.
        Averages the f1_score across both variants for each model.
@@ -246,8 +230,7 @@ def eval_features_average(
         df_result (pd.DataFrame): Dataframe with results.
         top_n (int): Number of top models to include.
         features (TFeatures): Features to evaluate.
-        tables_dir (Path): Directory to save tables.
-        figures_dir (Path): Directory to save figures.
+        output_dir (Path): Directory to save tables.
     """
     mask = df_result["features"] == features
     df_group = df_result[mask].copy()
@@ -270,40 +253,116 @@ def eval_features_average(
     )
     show_top_models(df_group)
 
-    to_table(df_group, tables_dir / f"both_{features}_average.tex")
+    to_table(df_group, output_dir / f"both_{features}_average.tex")
 
 
-def run_eval(df_result: pd.DataFrame, top_n: int, tables_dir: Path, figures_dir: Path):
+def run_eval(df_result: pd.DataFrame, top_n: int, output_dir: Path):
     """Runs the full evaluation.
 
     Args:
         df_result (pd.DataFrame): Dataframe with results.
         top_n (int): Number of top models to include.
-        tables_dir (Path): Directory to save tables.
-        figures_dir (Path): Directory to save figures.
+        output_dir (Path): Directory to save tables.
     """
-    console.print(f"TODO: got value {figures_dir}, but figures_dir is unused yet")
     for variant, features in product(
         get_args(TVariant), (all_features := get_args(TFeatures))
     ):
-        eval_group(df_result, top_n, variant, features, figures_dir, tables_dir)
+        eval_group(df_result, top_n, variant, features, output_dir)
 
     for features in all_features:
-        eval_features_absolute(df_result, top_n, features, tables_dir, figures_dir)
-        eval_features_average(df_result, top_n, features, tables_dir, figures_dir)
+        eval_features_absolute(df_result, top_n, features, output_dir)
+        eval_features_average(df_result, top_n, features, output_dir)
+        to_feature_table(df_result, features, output_dir / f"feature_{features}.tex")
+
+
+def show_best_params(df_result: pd.DataFrame):
+    """Shows the best parameters for each model.
+
+    Args:
+        df_result (pd.DataFrame): Dataframe with results.
+    """
+    df_sorted = df_result.sort_values(by="model")
+    for result in df_sorted.itertuples():
+        console.print(
+            f"Model: {str(result.model).upper()}, Variant: {result.variant}, Features: {result.features}"
+        )
+        params = loads(str(result.parameters))
+        show_params(params)
+        console.print("-" * 50)
+
+
+def to_feature_table(df: pd.DataFrame, features: TFeatures, output_path: Path):
+    """Converts the input dataframe to a latex table for the given features.
+    - Each table has columns variant model f1_score, where variant is the index
+
+    Args:
+        df (pd.DataFrame): Dataframe to convert to a latex table.
+        features (TFeatures): Features to filter the dataframe by.
+        output_path (Path): Path to save the latex table.
+    """
+    mask = df["features"] == features
+    df_table = df[mask][["variant", "model", "f1_score"]].copy()
+
+    # Make the values look nicer
+    model_map = {
+        "logistic_regression": "Logistic Regression",
+        "knn": "KNN",
+        "random_forest": "Random Forest",
+        "slovakbert": "SlovakBERT",
+        "modernbert": "ModernBERT",
+        "naive_bayes": "Multinomial Naive Bayes",
+        "svm": "SVM",
+        "mlp": "MLP",
+        "transformer": "Transformer",
+    }
+
+    col_map = {
+        "variant": "Variant",
+        "model": "Model",
+        "f1_score": "F1 Score",
+    }
+
+    def _map_func(model_name: str) -> str:
+        for key in model_map.keys():
+            if key in model_name:
+                return model_map[key]
+        return model_name
+
+    df_table["model"] = df_table["model"].map(_map_func)
+    df_table.rename(columns=col_map, inplace=True)
+    df_table = df_table.sort_values(by=["Variant", "Model"]).set_index(
+        ["Variant", "Model"]
+    )
+
+    df_table.to_latex(
+        output_path,
+        index=True,
+        multirow=True,
+        float_format="%.4f",
+        caption=f"Validation results on {features.title()} features",
+    )
+
+    print(df_table)
 
 
 def main():
     """Script entry point."""
     args = parse_args()
-    output_dir = Path(args.output)
-    check_output(output_dir)
+    if args.show_best_params:
+        show_best_params(pd.read_csv(args.input))
+        return
+
+    if (output := args.output) is None:
+        console.print("No output directory specified.")
+        return
+
+    (output_dir := Path(output)).mkdir(parents=True, exist_ok=True)
 
     df_result = pd.read_csv(args.input)
     if not validate_df(df_result):
         return
 
-    run_eval(df_result, args.top_n, output_dir / "tables", output_dir / "figures")
+    run_eval(df_result, args.top_n, output_dir)
 
 
 if __name__ == "__main__":
