@@ -116,7 +116,7 @@ def partial_ensemble_figure(df_ensemble: pd.DataFrame, output_dir: Path):
             g.get_yaxis().labelpad = 10
             g.set_title(f"{variant.title()} dataset variant")
             g.set_xlabel("Removed Feature")
-            g.set_yticks(np.arange(0, 1.1, 0.05))
+            g.set_yticks(np.arange(0, 1.1, 0.1))
             g.set_ylabel("F1-Score")
             g.set(ylim=(0, 1))
 
