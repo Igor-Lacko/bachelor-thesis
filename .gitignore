@@ -29,3 +29,6 @@ utils/scripts/
 
 # Result csvs
 results/
+
+# Models
+trained_models/
