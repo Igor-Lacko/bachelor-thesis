@@ -62,7 +62,6 @@ def create_table(df_table: pd.DataFrame, output_dir: Path):
     df_table = df_table.set_index(["Features", "Model", "Variant"])
     df_table = df_table.sort_index()
 
-    print(df_table)
     df_table.to_latex(
         table_path,
         float_format="%.2f",

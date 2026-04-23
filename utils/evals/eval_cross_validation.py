@@ -342,8 +342,6 @@ def to_feature_table(df: pd.DataFrame, features: TFeatures, output_path: Path):
         caption=f"Validation results on {features.title()} features",
     )
 
-    print(df_table)
-
 
 def main():
     """Script entry point."""
