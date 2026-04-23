@@ -98,7 +98,7 @@ def partial_ensemble_figure(df_ensemble: pd.DataFrame, output_dir: Path):
 
         df_melted["Without"] = df_melted["Without"].map(feature_name_map)
 
-        fig, axes = plt.subplots(2, 1, figsize=(10, 12), sharey=True, sharex=True)
+        fig, axes = plt.subplots(1, 2, figsize=(10, 6), sharey=True, sharex=True)
         for i, variant in enumerate(df_chosen_model["Variant"].unique()):
             df_filtered = df_melted[df_melted["Variant"] == variant]
             g = sns.stripplot(
@@ -114,14 +114,15 @@ def partial_ensemble_figure(df_ensemble: pd.DataFrame, output_dir: Path):
 
             g.get_xaxis().labelpad = 10
             g.get_yaxis().labelpad = 10
-            g.set_title(f"{variant.title()} dataset variant")
+            g.set_title(f"{variant.title()} dataset variant", pad=20)
             g.set_xlabel("Removed Feature")
             g.set_yticks(np.arange(0, 1.1, 0.1))
+            g.legend(loc="lower left", title="Metric")
             g.set_ylabel("F1-Score")
             g.set(ylim=(0, 1))
 
-        fig.subplots_adjust(hspace=0.2)
-        figure_path = output_dir / "classification_partial_ensemble_figure.svg"
+        fig.tight_layout()
+        figure_path = output_dir / "classification_partial_ensemble.svg"
         fig.savefig(figure_path, dpi=300)
         fig.clf()
 
