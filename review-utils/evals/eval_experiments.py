@@ -23,19 +23,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--slovakmistral-csv",
         type=Path,
-        required=True,
+        required=False,
         help="Path to the SlovakMistral results CSV file",
     )
     parser.add_argument(
         "--without-punctuation-csv",
         type=Path,
-        required=True,
+        required=False,
         help="Path to the CSV file for results without punctuation",
     )
     parser.add_argument(
         "--synonymized-csv",
         type=Path,
-        required=True,
+        required=False,
         help="Path to the CSV file for results with synonymized data",
     )
     parser.add_argument(
@@ -105,7 +105,7 @@ def model_stripplot(df: pd.DataFrame, output: Path, **kwargs):
             g.set_yticks(np.arange(0, 1.1, 0.1))
             ax.set_title(f"Variant: {variant.capitalize()}")
             g.set(ylim=(0, 1))
-            g.legend(loc="lower left", title="Metric")
+            g.legend(loc=kwargs.get("legend_loc"), title="Metric")
 
         fig.suptitle(kwargs.get("title", "Model Performance Comparison"), y=1.02)
         fig.tight_layout()
@@ -115,23 +115,28 @@ def model_stripplot(df: pd.DataFrame, output: Path, **kwargs):
 
 def main():
     args = parse_args()
-
-    df_slovakmistral = pd.read_csv(args.slovakmistral_csv)
-    # df_without_punctuation = pd.read_csv(args.without_punctuation_csv)
-    # df_synonymized = pd.read_csv(args.synonymized_csv)
     output_folder = args.output
 
-    # Slovakmistral and without punctuation can be plotted in the same way
-    model_stripplot(
-        df_slovakmistral,
-        output_folder / "slovakmistral_evaluation.svg",
-        title="Classifier performance on SlovakMistral reviews",
-    )
-    # model_stripplot(
-    #     df_without_punctuation,
-    #     output_folder / "without_punctuation_evaluation.svg",
-    #     title="Classifier performance on reviews without punctuation",
-    # )
+    if (slovakmistral := args.slovakmistral_csv) is not None:
+        df_slovakmistral = pd.read_csv(slovakmistral)
+        model_stripplot(
+            df_slovakmistral,
+            output_folder / "slovakmistral_evaluation.svg",
+            title="Classifier performance on SlovakMistral reviews",
+            legend_loc="lower left",
+        )
+
+    if (without_punctuation := args.without_punctuation_csv) is not None:
+        df_without_punctuation = pd.read_csv(without_punctuation)
+        model_stripplot(
+            df_without_punctuation,
+            output_folder / "without_punctuation_evaluation.svg",
+            title="Classifier performance on reviews without punctuation",
+            legend_loc="lower right",
+        )
+
+    if (synonymized := args.synonymized_csv) is not None:
+        raise NotImplementedError("Synonymized data evaluation is not implemented yet.")
 
 
 if __name__ == "__main__":

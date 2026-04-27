@@ -1,5 +1,5 @@
 [project]
-name = "utils"
+name = "review-utils"
 version = "0.1.0"
 description = "Help python/shell files for my bachelor thesis"
 readme = "README.md"
