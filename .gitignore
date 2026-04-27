@@ -14,9 +14,6 @@ presentations/*
 # 3rdparty libs, probably won't be used
 3rdparty/
 
-# Utility figs
-figures/
-
 # Utility files, TODOS, etc.
 *.txt
 *.md
