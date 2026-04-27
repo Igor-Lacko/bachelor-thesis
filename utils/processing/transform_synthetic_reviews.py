@@ -36,22 +36,22 @@ def parse_args() -> argparse.Namespace:
         "-w",
         "--wordnet",
         type=Path,
-        required=True,
-        help="Path to the WordNet database for synonymization.",
+        required=False,
+        help="Path to the WordNet database for synonymization if synonymization should be done.",
     )
     parser.add_argument(
         "-os",
         "--output-synonymized",
         type=Path,
-        required=True,
-        help="Folder to save the synonymized reviews CSV file.",
+        required=False,
+        help="Folder to save the synonymized reviews CSV file if synonymization should be done.",
     )
     parser.add_argument(
         "-on",
         "--output-no-punctuation",
         type=Path,
-        required=True,
-        help="Folder to save the no punctuation reviews CSV file.",
+        required=False,
+        help="Folder to save the no punctuation reviews CSV file if punctuation removal should be done.",
     )
     parser.add_argument(
         "-wp",
@@ -195,46 +195,24 @@ def remove_punctuation_one(review: str) -> str:
     return review
 
 
-def check_folders(withhout_punctuation_path: Path, synonymized_path: Path):
-    """Checks if the output folders exist, and creates them if they don't.
-
-    Args:
-        withhout_punctuation_path (Path): Path to the folder for no punctuation reviews.
-        synonymized_path (Path): Path to the folder for synonymized reviews.
-    """
-    if not withhout_punctuation_path.exists():
-        withhout_punctuation_path.mkdir(parents=True)
-    if not synonymized_path.exists():
-        synonymized_path.mkdir(parents=True)
-
-
 def main():
     """Script main function"""
     args = parse_args()
     df = pd.read_csv(args.input)
 
-    check_folders(
-        path_np := args.output_no_punctuation,
-        path_syn := args.output_synonymized,
-    )
-
-    try:
+    if (wn := args.wordnet) and (os := args.output_synonymized):
         df_synonymized = synonymize_full(
             df,
-            args.wordnet,
+            wn,
             args.word_probability,
         )
-        df_synonymized.to_csv(path_syn := (path_syn / "test.csv"), index=False)
+        df_synonymized.to_csv(path_syn := (os / "test.csv"), index=False)
         print(f"Synonymized reviews saved to: {path_syn}")
-    except NotImplementedError as e:
-        print(f"Synonymization not implemented: {e}")
 
-    try:
+    if op := args.output_no_punctuation:
         df_no_punctuation = remove_punctuation_full(df)
-        df_no_punctuation.to_csv(path_np := (path_np / "test.csv"), index=False)
+        df_no_punctuation.to_csv(path_np := (op / "test.csv"), index=False)
         print(f"No punctuation reviews saved to: {path_np}")
-    except NotImplementedError as e:
-        print(f"Removing punctuation not implemented: {e}")
 
 
 if __name__ == "__main__":
