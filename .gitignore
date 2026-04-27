@@ -20,7 +20,7 @@ figures/
 # Utility files, TODOS, etc.
 *.txt
 *.md
-!./README.md
+!README.md
 
 .vscode/
 
