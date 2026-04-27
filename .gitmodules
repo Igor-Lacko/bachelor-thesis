@@ -10,3 +10,6 @@
 [submodule "review-classifier"]
 	path = review-classifier
 	url = git@github.com:Igor-Lacko/review-classifier.git
+[submodule "review-utils"]
+	path = review-utils
+	url = git@github.com:Igor-Lacko/review-utils.git
