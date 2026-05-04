@@ -5,7 +5,20 @@ This is the repository for my bachelor's thesis, which is about the implementati
 - `review-classifier`: The implementation of the classification library/models. Also contains the framework for conducting experiments.
 - `review-scraper`: Implementation of a web scraper for [Booking.com](https://www.booking.com) Slovak reviews.
 - `review-synthesis`: Implementation of several models/templates for generating synthetic hotel reviews in Slovak from examples.
+- `review-utils`: Other utilities (scripts for plotting graphs and creating LaTeX tables, data processing...)
 
 
-The structure of this thesis is:
+The structure of this repository is:
 
+```
+├── presentations                           # Semestral project and state final exam presentation PDF
+│   └── figures
+├── README.md                               # This README
+├── review-classifier                       # The classification library and experiment framework
+├── review-scraper                          # The Booking.com review scraper
+├── review-synthesis                        # Scripts for synthesis of AI generated reviews and their quality evaluation
+├── review-utils                            # Other utilities (visualizations, data processing...)
+└── thesis                                  # Thesis text
+    ├── BP.pdf
+    └── figures
+```
