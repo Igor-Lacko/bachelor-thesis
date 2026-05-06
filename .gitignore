@@ -29,3 +29,6 @@ results/
 
 # Models
 trained_models/
+
+# LaTeX source code
+latex/
