@@ -11,19 +11,17 @@ presentations/*
 # Virtual environments
 .venv/
 
-# 3rdparty libs, probably won't be used
-3rdparty/
-
 # Utility files, TODOS, etc.
 *.txt
+!3rdparty/**/*.txt
 *.md
 !README.md
 !ood_dataset/NOTICE.md
+!3rdparty/**/*.md
 
 .vscode/
 
 __pycache__/
-utils/scripts/
 
 # Result csvs
 results/
@@ -33,3 +31,9 @@ trained_models/
 
 # LaTeX source code
 latex/
+
+# Submission
+scripts/ 
+
+# Not published, only for submission
+SLOVAKBERT-MIT-LICENSE.txt
