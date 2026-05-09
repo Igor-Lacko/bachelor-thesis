@@ -18,6 +18,7 @@ presentations/*
 *.txt
 *.md
 !README.md
+!ood_dataset/NOTICE.md
 
 .vscode/
 
