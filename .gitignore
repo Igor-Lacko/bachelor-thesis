@@ -37,3 +37,7 @@ scripts/
 
 # Not published, only for submission
 SLOVAKBERT-MIT-LICENSE.txt
+
+# Thesis
+thesis/
+presentations/
